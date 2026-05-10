@@ -141,7 +141,7 @@ describe('ML^box parser/compiler/CCAM', () => {
     expectLinesInOrder(compiled.log, [
       'push; push; push; \'6; swap; \'7; cons; add; Cur(lift); cons; Cur(emit(push); [[ a ]] Ω=∅ Λ=a; emit(swap); [[ 8 ]] Ω=∅ Λ=a; emit(cons); emit(add)); cons; [[ result ]] Ω=∅ Λ=result',
       'push; push; push; \'6; swap; \'7; cons; add; Cur(lift); cons; Cur(emit(push); push; push; fst; snd; swap; snd; cons; app; snd; swap; emit(swap); [[ 8 ]] Ω=∅ Λ=a; emit(cons); emit(add)); cons; [[ result ]] Ω=∅ Λ=result',
-      'push; push; push; \'6; swap; \'7; cons; add; Cur(lift); cons; Cur(emit(push); push; push; fst; snd; swap; snd; cons; app; snd; swap; emit(swap); emit(\'8); emit(cons); emit(add)); cons; snd; arena; cons; app; snd; call',
+      'push; push; push; \'6; swap; \'7; cons; add; Cur(lift); cons; Cur(emit(push); push; push; fst; snd; swap; snd; cons; app; snd; swap; emit(swap); emit(\'8); emit(cons); emit(add)); cons; push; snd; swap; arena; cons; app; snd; call',
     ])
     expect(compiled.log).not.toContain(
       'push; push; push; \'6; swap; \'7; cons; add; Cur(lift; snd); cons; Cur(emit(push); push; emit(swap); [[ 8 ]] Ω=∅ Λ=a; emit(cons); emit(add); snd); cons; snd; arena; cons; app; call',
@@ -197,8 +197,8 @@ describe('ML^box parser/compiler/CCAM', () => {
       expect(formatValue(result.value)).toBe('9')
     })
 
-    it('arena pushes a fresh empty code block', () => {
-      expect(finalStack([{ op: 'arena' }], intValue(1))).toBe('[{.} :: 1]')
+    it('arena replaces the top stack value with a fresh empty code block', () => {
+      expect(finalStack([{ op: 'arena' }], intValue(1))).toBe('[{.}]')
     })
 
     it('emit appends an instruction to the current code block', () => {
@@ -215,7 +215,7 @@ describe('ML^box parser/compiler/CCAM', () => {
 
     it('merge appends a Cur instruction to the current code block', () => {
       const env = pairValue(intValue(1), blockValue([{ op: 'quote', value: intValue(2) }]))
-      const result = run([{ op: 'merge', program: [{ op: 'snd' }] }], env)
+      const result = run([{ op: 'merge' }], pairValue(blockValue([{ op: 'snd' }]), env))
       expect(formatValue(result.value)).toBe("(1, {'2; Cur(snd)})")
     })
 
@@ -241,7 +241,7 @@ describe('ML^box parser/compiler/CCAM', () => {
         { op: 'emit', instruction: { op: 'cur', program: [{ op: 'add' }] } },
         { op: 'lift' },
         { op: 'arena' },
-        { op: 'merge', program: [{ op: 'fst' }, { op: 'arena' }, { op: 'lift' }, { op: 'snd' }, { op: 'id' }] },
+        { op: 'merge' },
         { op: 'call' },
         { op: 'add' },
         { op: 'sub' },
@@ -263,7 +263,7 @@ describe('ML^box parser/compiler/CCAM', () => {
         [{ op: 'emit', instruction: { op: 'id' } }],
         [{ op: 'lift' }],
         [{ op: 'arena' }],
-        [{ op: 'merge', program: [{ op: 'id' }] }],
+        [{ op: 'merge' }],
         [{ op: 'call' }],
         [{ op: 'add' }],
         [{ op: 'sub' }],
@@ -279,14 +279,14 @@ describe('ML^box parser/compiler/CCAM', () => {
       expectProgramRoundTrip([
         { op: 'cur', program: [{ op: 'cur', program: [{ op: 'emit', instruction: { op: 'quote', value: intValue(-3) } }] }] },
         { op: 'emit', instruction: { op: 'cur', program: [{ op: 'quote', value: { type: 'unit' } }] } },
-        { op: 'merge', program: [{ op: 'cur', program: [{ op: 'snd' }] }] },
+        { op: 'merge' },
       ])
     })
 
     it('rejects unsupported CCAM program strings', () => {
       expect(() => parseProgram('unknown')).toThrow('Unknown CCAM instruction')
       expect(() => parseProgram('push; ; snd')).toThrow('Empty CCAM instruction')
-      expect(() => parseProgram('merge(snd)')).toThrow('Expected merge(Cur(...))')
+      expect(() => parseProgram('merge(snd)')).toThrow('Unknown CCAM instruction')
       expect(() => parseProgram("'(1, 2)")).toThrow('Unsupported CCAM quoted value')
     })
   })
@@ -309,7 +309,7 @@ describe('ML^box parser/compiler/CCAM', () => {
 
     it('compiles a code variable by activating its generator in a fresh arena', () => {
       const compiled = compileNormalTerm(parse('u'), [{ name: 'u', isCode: true }])
-      expect(formatProgram(compiled.program)).toBe('snd; arena; cons; app; snd; call')
+      expect(formatProgram(compiled.program)).toBe('push; snd; swap; arena; cons; app; snd; call')
     })
 
     it('compiles code as a Cur instruction around generator compilation', () => {
@@ -334,13 +334,13 @@ describe('ML^box parser/compiler/CCAM', () => {
 
     it('compiles generator lambdas by generating the body in a fresh arena before merge', () => {
       const compiled = compileGenerator(parse('fn x => x'), [], [])
-      expect(formatProgram(compiled.program)).toBe('push; fst; arena; cons; emit(snd); snd; swap; snd; cons; merge(Cur(snd))')
+      expect(formatProgram(compiled.program)).toBe('push; push; fst; swap; arena; cons; emit(snd); snd; swap; id; cons; merge')
     })
 
     it('compiles generator applications by emitting push, swap, cons, and app', () => {
       const compiled = compileGenerator(parse('(fn x => x) 1'), [], [])
       expect(formatProgram(compiled.program)).toBe(
-        "emit(push); emit(Cur(snd)); emit(swap); emit('1); emit(cons); emit(app)",
+        "emit(push); push; push; fst; swap; arena; cons; emit(snd); snd; swap; id; cons; merge; emit(swap); emit('1); emit(cons); emit(app)",
       )
     })
 

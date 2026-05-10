@@ -98,11 +98,11 @@ function compileInstruction(instruction: Instruction, context: CompileContext): 
     case 'arena':
       return compileArena()
     case 'emit':
-      return compileEmit(instruction.instruction)
+      return compileEmit(instruction.instruction, context)
     case 'lift':
       return compileLift()
     case 'merge':
-      return compileMerge(instruction.program)
+      return compileMerge(context)
     case 'call':
       return compileCall(context)
     default:
@@ -129,15 +129,14 @@ function compileArena(): string[] {
     `sw ${codeHeap}, 0(${heap})`,
     `sw ${codeHeap}, 4(${heap})`,
     ...storeInstructionWord(codeHeap, 0, rv32Word(returnFooter)),
-    `addi ${sp}, ${sp}, -4`,
     `sw ${heap}, 0(${sp})`,
     `addi ${heap}, ${heap}, 8`,
     `addi ${codeHeap}, ${codeHeap}, 4`,
   ]
 }
 
-function compileEmit(instruction: Instruction): string[] {
-  const snippet = compileEmittedSnippet(instruction)
+function compileEmit(instruction: Instruction, context: CompileContext): string[] {
+  const snippet = compileEmittedSnippet(instruction, context)
 
   return [
     `lw ${pairPointer}, 0(${sp})`,
@@ -150,33 +149,66 @@ function compileEmit(instruction: Instruction): string[] {
   ]
 }
 
-function compileMerge(program: Instruction[]): string[] {
-  const snippet = compileGeneratedClosureSnippet(program)
+function compileMerge(context: CompileContext): string[] {
+  const id = context.nextApplicationId
+  context.nextApplicationId += 1
+  const copyLoopLabel = `.Lccam_merge_${id}_copy`
+  const copyDoneLabel = `.Lccam_merge_${id}_done`
 
   return [
     `lw ${pairPointer}, 0(${sp})`,
-    `lw ${left}, 4(${pairPointer})`,
-    `lw ${cursor}, 4(${left})`,
-    ...compileGeneratedSnippet(cursor, snippet.lines),
-    `addi ${pairPointer}, ${cursor}, ${snippet.cursorOffset}`,
+    `lw ${left}, 0(${pairPointer})`,
+    `lw ${right}, 4(${pairPointer})`,
+    `lw ${labelAddress}, 0(${left})`,
+    `lw ${instructionWord}, 4(${left})`,
+    `addi ${instructionWord}, ${instructionWord}, 4`,
+    `addi ${left}, ${codeHeap}, 256`,
+    `addi ${roundedHigh}, ${left}, 0`,
+    `${copyLoopLabel}:`,
+    `beq ${labelAddress}, ${instructionWord}, ${copyDoneLabel}`,
+    `lw ${pairPointer}, 0(${labelAddress})`,
+    `sw ${pairPointer}, 0(${roundedHigh})`,
+    `addi ${labelAddress}, ${labelAddress}, 4`,
+    `addi ${roundedHigh}, ${roundedHigh}, 4`,
+    `jal x0, ${copyLoopLabel}`,
+    `${copyDoneLabel}:`,
+    `lw ${pairPointer}, 4(${right})`,
+    `lw ${cursor}, 4(${pairPointer})`,
+    ...compileDynamicClosureSnippet(cursor, left),
+    `addi ${pairPointer}, ${cursor}, 28`,
+    `lw ${left}, 4(${right})`,
     `sw ${pairPointer}, 4(${left})`,
-    `addi ${codeHeap}, ${cursor}, ${snippet.lines.length * 4}`,
+    `addi ${codeHeap}, ${roundedHigh}, 0`,
+    `sw ${right}, 0(${sp})`,
   ]
 }
 
-function compileEmittedSnippet(instruction: Instruction): GeneratedSnippet {
-  if (instruction.op === 'cur') return compileGeneratedClosureSnippet(instruction.program)
+function compileDynamicClosureSnippet(addressRegister: string, bodyAddressRegister: string): string[] {
+  return [
+    ...storeInstructionWord(addressRegister, 0, rv32Word(`lw ${pairPointer}, 0(${sp})`)),
+    ...storeInstructionWord(addressRegister, 4, rv32Word(`sw ${pairPointer}, 0(${heap})`)),
+    ...storeDynamicLuiInstructionWord(addressRegister, 8, bodyAddressRegister, labelAddress),
+    ...storeDynamicAddiInstructionWord(addressRegister, 12, bodyAddressRegister, labelAddress, labelAddress),
+    ...storeInstructionWord(addressRegister, 16, rv32Word(`sw ${labelAddress}, 4(${heap})`)),
+    ...storeInstructionWord(addressRegister, 20, rv32Word(`sw ${heap}, 0(${sp})`)),
+    ...storeInstructionWord(addressRegister, 24, rv32Word(`addi ${heap}, ${heap}, 8`)),
+    ...storeInstructionWord(addressRegister, 28, rv32Word(returnFooter)),
+  ]
+}
 
-  const snippetBody = compileGeneratedInstruction(instruction, 'emit')
+function compileEmittedSnippet(instruction: Instruction, context: CompileContext): GeneratedSnippet {
+  if (instruction.op === 'cur') return compileGeneratedClosureSnippet(instruction.program, context)
+
+  const snippetBody = compileGeneratedInstruction(instruction, 'emit', context)
   return {
     lines: [...snippetBody, returnFooter],
     cursorOffset: snippetBody.length * 4,
   }
 }
 
-function compileGeneratedClosureSnippet(program: Instruction[], includeContinuationReturn = true): GeneratedSnippet {
+function compileGeneratedClosureSnippet(program: Instruction[], context: CompileContext, includeContinuationReturn = true): GeneratedSnippet {
   const body = [
-    ...program.flatMap((instruction) => compileGeneratedInstruction(instruction, 'merge')),
+    ...program.flatMap((instruction) => compileGeneratedInstruction(instruction, 'merge', context)),
     returnFooter,
   ]
   const creation = [
@@ -197,7 +229,7 @@ function compileGeneratedClosureSnippet(program: Instruction[], includeContinuat
   }
 }
 
-function compileGeneratedInstruction(instruction: Instruction, source: 'emit' | 'merge'): string[] {
+function compileGeneratedInstruction(instruction: Instruction, source: 'emit' | 'merge', context: CompileContext): string[] {
   switch (instruction.op) {
     case 'id':
       if (source === 'emit') break
@@ -228,12 +260,15 @@ function compileGeneratedInstruction(instruction: Instruction, source: 'emit' | 
     case 'snd':
       return [`lw ${pairPointer}, 0(${sp})`, `lw ${pairPointer}, 4(${pairPointer})`, `sw ${pairPointer}, 0(${sp})`]
     case 'cur':
-      return compileGeneratedClosureSnippet(instruction.program, false).lines
+      return compileGeneratedClosureSnippet(instruction.program, context, false).lines
     case 'add':
     case 'sub':
       return compileIntegerBinary(instruction.op)
     case 'arena':
       if (source === 'merge') return compileArena()
+      break
+    case 'merge':
+      if (source === 'merge') return compileMerge(context)
       break
     case 'lift':
       if (source === 'merge') return compileLift()
@@ -370,6 +405,30 @@ function compileGeneratedSnippet(addressRegister: string, lines: string[]): stri
 
 function storeInstructionWord(addressRegister: string, offset: number, word: number): string[] {
   return [...loadImmediate32(labelAddress, word), `sw ${labelAddress}, ${offset}(${addressRegister})`]
+}
+
+function storeDynamicLuiInstructionWord(addressRegister: string, offset: number, valueRegister: string, targetRegister: string): string[] {
+  return [
+    `addi ${roundedHigh}, ${valueRegister}, 2047`,
+    `addi ${roundedHigh}, ${roundedHigh}, 1`,
+    `srli ${roundedHigh}, ${roundedHigh}, 12`,
+    `slli ${roundedHigh}, ${roundedHigh}, 12`,
+    `srli ${instructionWord}, ${roundedHigh}, 12`,
+    `slli ${instructionWord}, ${instructionWord}, 12`,
+    ...loadImmediate32(labelAddress, rv32Word(`lui ${targetRegister}, 0`)),
+    `or ${instructionWord}, ${instructionWord}, ${labelAddress}`,
+    `sw ${instructionWord}, ${offset}(${addressRegister})`,
+  ]
+}
+
+function storeDynamicAddiInstructionWord(addressRegister: string, offset: number, valueRegister: string, sourceRegister: string, targetRegister: string): string[] {
+  return [
+    `sub ${instructionWord}, ${valueRegister}, ${roundedHigh}`,
+    `slli ${instructionWord}, ${instructionWord}, 20`,
+    ...loadImmediate32(labelAddress, rv32Word(`addi ${targetRegister}, ${sourceRegister}, 0`)),
+    `or ${instructionWord}, ${instructionWord}, ${labelAddress}`,
+    `sw ${instructionWord}, ${offset}(${addressRegister})`,
+  ]
 }
 
 function loadImmediate32(register: string, value: number): string[] {

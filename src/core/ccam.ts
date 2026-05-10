@@ -18,7 +18,7 @@ export type Instruction =
   | { op: 'emit'; instruction: Instruction }
   | { op: 'lift' }
   | { op: 'arena' }
-  | { op: 'merge'; program: Instruction[] }
+  | { op: 'merge' }
   | { op: 'call' }
   | { op: 'add' }
   | { op: 'sub' }
@@ -101,11 +101,15 @@ function execute(instruction: Instruction, stack: Value[], prepend: (program: In
       return
     }
     case 'arena':
-      stack.unshift({ type: 'block', program: [] })
+      stack[0] = { type: 'block', program: [] }
       return
-    case 'merge':
-      currentBlock(stack[0]).program.push({ op: 'cur', program: instruction.program })
+    case 'merge': {
+      const env = asPair(stack[0])
+      const bodyBlock = asBlock(env.left)
+      currentBlock(env.right).program.push({ op: 'cur', program: [...bodyBlock.program] })
+      stack[0] = env.right
       return
+    }
     case 'call': {
       const block = asBlock(stack.shift())
       prepend(block.program)
@@ -167,8 +171,6 @@ export function formatInstruction(instruction: Instruction): string {
       return `Cur(${formatProgram(instruction.program)})`
     case 'emit':
       return `emit(${formatInstruction(instruction.instruction)})`
-    case 'merge':
-      return `merge(Cur(${formatProgram(instruction.program)}))`
     default:
       return instruction.op
   }
@@ -187,16 +189,9 @@ function parseInstruction(source: string): Instruction {
   if (trimmed.startsWith("'")) return { op: 'quote', value: parseQuotedValue(trimmed.slice(1), trimmed) }
   if (trimmed.startsWith('Cur(')) return { op: 'cur', program: parseProgram(parenthesizedContent(trimmed, 'Cur')) }
   if (trimmed.startsWith('emit(')) return { op: 'emit', instruction: parseInstruction(parenthesizedContent(trimmed, 'emit')) }
-  if (trimmed.startsWith('merge(')) return parseMergeInstruction(trimmed)
 
   if (simpleInstructionOps.has(trimmed)) return { op: trimmed as SimpleInstructionOp }
   throw new Error(`Unknown CCAM instruction: ${trimmed}`)
-}
-
-function parseMergeInstruction(source: string): Instruction {
-  const content = parenthesizedContent(source, 'merge').trim()
-  if (!content.startsWith('Cur(')) throw new Error(`Expected merge(Cur(...)), got ${source}`)
-  return { op: 'merge', program: parseProgram(parenthesizedContent(content, 'Cur')) }
 }
 
 function parseQuotedValue(source: string, original: string): Value {
@@ -250,7 +245,7 @@ function assertBalancedParentheses(source: string, original: string): void {
   if (depth !== 0) throw new Error(`Unbalanced CCAM instruction: ${original}`)
 }
 
-type SimpleInstructionOp = Exclude<Instruction['op'], 'quote' | 'cur' | 'emit' | 'merge'>
+type SimpleInstructionOp = Exclude<Instruction['op'], 'quote' | 'cur' | 'emit'>
 
 const simpleInstructionOps = new Set<string>([
   'id',
@@ -262,6 +257,7 @@ const simpleInstructionOps = new Set<string>([
   'app',
   'lift',
   'arena',
+  'merge',
   'call',
   'add',
   'sub',
