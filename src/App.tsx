@@ -112,6 +112,10 @@ end`,
 end`,
   },
   {
+    name: 'compile application in code',
+    source: `code ((fn x => x) 1)`,
+  },
+  {
     name: 'generated function',
     source: `(let cogen f = code (fn x => x + 10) in
   f
