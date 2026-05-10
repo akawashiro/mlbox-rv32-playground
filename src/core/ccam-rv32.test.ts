@@ -322,6 +322,15 @@ describe('CCAM to RV32I compiler', () => {
     expect(steps.at(-1)?.trap?.reason).toBe('ebreak')
   })
 
+  it('annotates merge assembly with per-step comments', () => {
+    const rv32 = compileCcamToRv32('push; arena; cons; push; push; fst; swap; arena; cons; emit(snd); snd; swap; id; cons; merge')
+
+    expect(rv32).toContain('; merge: load stack top pair (bodyBlock, envWithCurrentBlock)')
+    expect(rv32).toContain('; merge: copy bodyBlock native words into stable storage')
+    expect(rv32).toContain('; merge: write snippet that creates a closure over the copied body')
+    expect(rv32).toContain('; merge: restore envWithCurrentBlock as the stack top')
+  })
+
   it('places merge bodies so later emits do not overwrite them', () => {
     const rv32 = compileCcamToRv32("push; arena; cons; push; push; fst; swap; arena; cons; emit(snd); snd; swap; id; cons; merge; emit('1)")
     const state = createCcamRv32Machine(rv32)
