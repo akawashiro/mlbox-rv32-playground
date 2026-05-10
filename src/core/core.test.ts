@@ -89,7 +89,7 @@ describe('ML^box parser/compiler/CCAM', () => {
 
   it('evaluates nested generated code to a generated-code closure', () => {
     const result = execute('let cogen u = code (code 1) in u end')
-    expect(formatValue(result.value)).toBe("[() : emit('1); snd]")
+    expect(formatValue(result.value)).toBe("[() : emit('1)]")
   })
 
   it('evaluates lift inside generated code', () => {
@@ -132,16 +132,16 @@ describe('ML^box parser/compiler/CCAM', () => {
     expectLinesInOrder(compiled.log, [
       'push; [[ let cogen a = lift (6 + 7) in code (a + 8) end ]] Ω=∅; cons; [[ result ]] Ω=∅ Λ=result',
       'push; push; [[ lift (6 + 7) ]] Ω=∅; cons; [[ code (a + 8) ]] Ω=∅ Λ=a; cons; [[ result ]] Ω=∅ Λ=result',
-      'push; push; [[ 6 + 7 ]] Ω=∅; Cur(lift; snd); cons; [[ code (a + 8) ]] Ω=∅ Λ=a; cons; [[ result ]] Ω=∅ Λ=result',
-      'push; push; push; [[ 6 ]] Ω=∅; swap; [[ 7 ]] Ω=∅; cons; add; Cur(lift; snd); cons; [[ code (a + 8) ]] Ω=∅ Λ=a; cons; [[ result ]] Ω=∅ Λ=result',
-      'push; push; push; \'6; swap; [[ 7 ]] Ω=∅; cons; add; Cur(lift; snd); cons; [[ code (a + 8) ]] Ω=∅ Λ=a; cons; [[ result ]] Ω=∅ Λ=result',
-      'push; push; push; \'6; swap; \'7; cons; add; Cur(lift; snd); cons; [[ code (a + 8) ]] Ω=∅ Λ=a; cons; [[ result ]] Ω=∅ Λ=result',
-      'push; push; push; \'6; swap; \'7; cons; add; Cur(lift; snd); cons; Cur([[ a + 8 ]] Ω=∅ Λ=a; snd); cons; [[ result ]] Ω=∅ Λ=result',
+      'push; push; [[ 6 + 7 ]] Ω=∅; Cur(lift); cons; [[ code (a + 8) ]] Ω=∅ Λ=a; cons; [[ result ]] Ω=∅ Λ=result',
+      'push; push; push; [[ 6 ]] Ω=∅; swap; [[ 7 ]] Ω=∅; cons; add; Cur(lift); cons; [[ code (a + 8) ]] Ω=∅ Λ=a; cons; [[ result ]] Ω=∅ Λ=result',
+      'push; push; push; \'6; swap; [[ 7 ]] Ω=∅; cons; add; Cur(lift); cons; [[ code (a + 8) ]] Ω=∅ Λ=a; cons; [[ result ]] Ω=∅ Λ=result',
+      'push; push; push; \'6; swap; \'7; cons; add; Cur(lift); cons; [[ code (a + 8) ]] Ω=∅ Λ=a; cons; [[ result ]] Ω=∅ Λ=result',
+      'push; push; push; \'6; swap; \'7; cons; add; Cur(lift); cons; Cur([[ a + 8 ]] Ω=∅ Λ=a); cons; [[ result ]] Ω=∅ Λ=result',
     ])
     expectLinesInOrder(compiled.log, [
-      'push; push; push; \'6; swap; \'7; cons; add; Cur(lift; snd); cons; Cur(emit(push); [[ a ]] Ω=∅ Λ=a; emit(swap); [[ 8 ]] Ω=∅ Λ=a; emit(cons); emit(add); snd); cons; [[ result ]] Ω=∅ Λ=result',
-      'push; push; push; \'6; swap; \'7; cons; add; Cur(lift; snd); cons; Cur(emit(push); push; push; fst; snd; swap; snd; cons; app; swap; emit(swap); [[ 8 ]] Ω=∅ Λ=a; emit(cons); emit(add); snd); cons; [[ result ]] Ω=∅ Λ=result',
-      'push; push; push; \'6; swap; \'7; cons; add; Cur(lift; snd); cons; Cur(emit(push); push; push; fst; snd; swap; snd; cons; app; swap; emit(swap); emit(\'8); emit(cons); emit(add); snd); cons; snd; arena; cons; app; call',
+      'push; push; push; \'6; swap; \'7; cons; add; Cur(lift); cons; Cur(emit(push); [[ a ]] Ω=∅ Λ=a; emit(swap); [[ 8 ]] Ω=∅ Λ=a; emit(cons); emit(add)); cons; [[ result ]] Ω=∅ Λ=result',
+      'push; push; push; \'6; swap; \'7; cons; add; Cur(lift); cons; Cur(emit(push); push; push; fst; snd; swap; snd; cons; app; snd; swap; emit(swap); [[ 8 ]] Ω=∅ Λ=a; emit(cons); emit(add)); cons; [[ result ]] Ω=∅ Λ=result',
+      'push; push; push; \'6; swap; \'7; cons; add; Cur(lift); cons; Cur(emit(push); push; push; fst; snd; swap; snd; cons; app; snd; swap; emit(swap); emit(\'8); emit(cons); emit(add)); cons; snd; arena; cons; app; snd; call',
     ])
     expect(compiled.log).not.toContain(
       'push; push; push; \'6; swap; \'7; cons; add; Cur(lift; snd); cons; Cur(emit(push); push; emit(swap); [[ 8 ]] Ω=∅ Λ=a; emit(cons); emit(add); snd); cons; snd; arena; cons; app; call',
@@ -309,22 +309,22 @@ describe('ML^box parser/compiler/CCAM', () => {
 
     it('compiles a code variable by activating its generator in a fresh arena', () => {
       const compiled = compileNormalTerm(parse('u'), [{ name: 'u', isCode: true }])
-      expect(formatProgram(compiled.program)).toBe('snd; arena; cons; app; call')
+      expect(formatProgram(compiled.program)).toBe('snd; arena; cons; app; snd; call')
     })
 
     it('compiles code as a Cur instruction around generator compilation', () => {
       const compiled = compileNormalTerm(parse('code 1'), [])
-      expect(formatProgram(compiled.program)).toBe("Cur(emit('1); snd)")
+      expect(formatProgram(compiled.program)).toBe("Cur(emit('1))")
     })
 
     it('compiles lift by compiling the source term and wrapping lift in Cur', () => {
       const compiled = compileNormalTerm(parse('lift (1 + 2)'), [])
-      expect(formatProgram(compiled.program)).toBe("push; '1; swap; '2; cons; add; Cur(lift; snd)")
+      expect(formatProgram(compiled.program)).toBe("push; '1; swap; '2; cons; add; Cur(lift)")
     })
 
     it('compiles let cogen by pairing the generated binding with the body environment', () => {
       const compiled = compileNormalTerm(parse('let cogen u = code 1 in 2 end'), [])
-      expect(formatProgram(compiled.program)).toBe("push; Cur(emit('1); snd); cons; '2")
+      expect(formatProgram(compiled.program)).toBe("push; Cur(emit('1)); cons; '2")
     })
 
     it('compiles generator value variables by emitting environment selections', () => {
@@ -347,19 +347,19 @@ describe('ML^box parser/compiler/CCAM', () => {
     it('compiles generator let cogen by binding the generated cogen before substituting it', () => {
       const compiled = compileGenerator(parse('let cogen u = code 1 in u end'), [], [])
       expect(formatProgram(compiled.program)).toBe(
-        "push; fst; push; Cur(emit('1); snd); cons; swap; snd; cons; push; push; fst; snd; swap; snd; cons; app; swap",
+        "push; fst; push; Cur(emit('1)); cons; swap; snd; cons; push; push; fst; snd; swap; snd; cons; app; snd; swap",
       )
     })
 
     it('compiles generator code variables in Lambda by substituting the captured generator', () => {
       const compiled = compileGenerator(parse('u'), [{ name: 'u', isCode: true }], ['u'])
-      expect(formatProgram(compiled.program)).toBe('push; push; fst; snd; swap; snd; cons; app; swap')
+      expect(formatProgram(compiled.program)).toBe('push; push; fst; snd; swap; snd; cons; app; snd; swap')
     })
 
     it('compiles nested generator code by lifting and applying a generator closure', () => {
       const compiled = compileGenerator(parse('code 1'), [], [])
       expect(formatProgram(compiled.program)).toBe(
-        "push; fst; Cur(emit('1); snd); swap; snd; cons; lift",
+        "push; fst; Cur(emit('1)); swap; snd; cons; lift",
       )
     })
 
@@ -371,7 +371,7 @@ describe('ML^box parser/compiler/CCAM', () => {
     it('compiles generator let cogen by extending the generator environment', () => {
       const compiled = compileGenerator(parse('let cogen u = code 1 in 2 end'), [], [])
       expect(formatProgram(compiled.program)).toBe(
-        "push; fst; push; Cur(emit('1); snd); cons; swap; snd; cons; emit('2)",
+        "push; fst; push; Cur(emit('1)); cons; swap; snd; cons; emit('2)",
       )
     })
   })

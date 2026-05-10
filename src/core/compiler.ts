@@ -41,7 +41,7 @@ function compileNormalTermCore(expr: Expr, ctx: ContextEntry[]): Compiled {
       const entry = lookup(ctx, expr.name)
       const path = envPath(ctx, expr.name)
       if (entry.isCode) {
-        return leaf(judgement, [...path, { op: 'arena' }, { op: 'cons' }, { op: 'app' }, { op: 'call' }])
+        return leaf(judgement, [...path, { op: 'arena' }, { op: 'cons' }, { op: 'app' }, { op: 'snd' }, { op: 'call' }])
       }
       return leaf(judgement, path)
     }
@@ -99,15 +99,15 @@ function compileNormalTermCore(expr: Expr, ctx: ContextEntry[]): Compiled {
     case 'code': {
       const codeVars = ctx.filter((entry) => entry.isCode).map((entry) => entry.name)
       const body = compileGeneratorCore(expr.body, ctx, codeVars)
-      const program: Instruction[] = [{ op: 'cur', program: [...body.program, { op: 'snd' }] }]
-      return composite(judgement, `Cur(${formatGeneratorJudgement(expr.body, ctx, codeVars)}; snd)`, program, [
+      const program: Instruction[] = [{ op: 'cur', program: body.program }]
+      return composite(judgement, `Cur(${formatGeneratorJudgement(expr.body, ctx, codeVars)})`, program, [
         { placeholder: formatGeneratorJudgement(expr.body, ctx, codeVars), trace: body.trace },
       ])
     }
     case 'lift': {
       const body = compileNormalTermCore(expr.body, ctx)
-      const program: Instruction[] = [...body.program, { op: 'cur', program: [{ op: 'lift' }, { op: 'snd' }] }]
-      return composite(judgement, `${formatJudgement(expr.body, ctx, [])}; Cur(lift; snd)`, program, [
+      const program: Instruction[] = [...body.program, { op: 'cur', program: [{ op: 'lift' }] }]
+      return composite(judgement, `${formatJudgement(expr.body, ctx, [])}; Cur(lift)`, program, [
         { placeholder: formatJudgement(expr.body, ctx, []), trace: body.trace },
       ])
     }
@@ -228,7 +228,7 @@ function compileGeneratorCore(expr: Expr, capturedCtx: ContextEntry[], codeVars:
       const program: Instruction[] = [
         { op: 'push' },
         { op: 'fst' },
-        { op: 'cur', program: [...nested.program, { op: 'snd' }] },
+        { op: 'cur', program: nested.program },
         { op: 'swap' },
         { op: 'snd' },
         { op: 'cons' },
@@ -236,7 +236,7 @@ function compileGeneratorCore(expr: Expr, capturedCtx: ContextEntry[], codeVars:
       ]
       return composite(
         judgement,
-        `push; fst; Cur(${formatGeneratorJudgement(expr.body, capturedCtx, codeVars)}; snd); swap; snd; cons; lift`,
+        `push; fst; Cur(${formatGeneratorJudgement(expr.body, capturedCtx, codeVars)}); swap; snd; cons; lift`,
         program,
         [{ placeholder: formatGeneratorJudgement(expr.body, capturedCtx, codeVars), trace: nested.trace }],
       )
@@ -336,6 +336,7 @@ function codeVariableSubstitution(path: Instruction[]): Instruction[] {
     { op: 'snd' },
     { op: 'cons' },
     { op: 'app' },
+    { op: 'snd' },
     { op: 'swap' },
   ]
 }
