@@ -6,17 +6,15 @@ import { compileCcamToRv32 } from './core/ccam-rv32'
 import { compile } from './core/mlbox-ccam'
 import { formatProgram, formatValue, parseProgram, run } from './core/ccam'
 import { parse } from './core/mlbox-expr-parser'
+import { assembleRv32, disassembleRv32, disassembleRv32Word } from './core/riscv-asm'
 import {
-  assembleRv32,
   createRv32Machine,
-  disassembleRv32,
-  disassembleRv32Word,
   formatRv32Instruction,
   formatRv32Register,
   formatRv32Word,
   stepRv32,
-} from './core/riscv'
-import type { Rv32State, Rv32StepResult } from './core/riscv'
+} from './core/riscv-emu'
+import type { Rv32State, Rv32StepResult } from './core/riscv-emu'
 
 const samples = [
   {

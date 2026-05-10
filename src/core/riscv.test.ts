@@ -1,12 +1,14 @@
 import { describe, expect, it } from 'vitest'
 import {
   assembleRv32,
+} from './riscv-asm'
+import {
   createRv32Machine,
   formatRv32Instruction,
   formatRv32Word,
   runRv32,
   stepRv32,
-} from './riscv'
+} from './riscv-emu'
 
 function r(funct7: number, rs2: number, rs1: number, funct3: number, rd: number, opcode = 0x33): number {
   return (funct7 << 25) | (rs2 << 20) | (rs1 << 15) | (funct3 << 12) | (rd << 7) | opcode

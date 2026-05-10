@@ -3,7 +3,8 @@ import { compileCcamProgramToRv32, compileCcamToRv32 } from './ccam-rv32'
 import { formatProgram } from './ccam'
 import { compile } from './mlbox-ccam'
 import { parse } from './mlbox-expr-parser'
-import { assembleRv32, assembleRv32Line, createRv32Machine, runRv32 } from './riscv'
+import { assembleRv32, assembleRv32Line } from './riscv-asm'
+import { createRv32Machine, runRv32 } from './riscv-emu'
 
 function wordsFromBytes(bytes: Uint8Array): number[] {
   const words: number[] = []

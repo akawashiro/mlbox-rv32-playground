@@ -163,7 +163,7 @@ captured generator が `app` で呼ばれる場合も、引数として渡され
 
 ## RV32I Assembler
 
-`src/core/riscv.ts` の `assembleRv32(source: string)` は RV32I assembly を bytecode に変換します。UI では assembler の結果を `RV32I Machine Code (from RV32I Assembly)` パネルに disassembly として表示します。
+`src/core/riscv-asm.ts` の `assembleRv32(source: string)` は RV32I assembly を bytecode に変換します。UI では assembler の結果を `RV32I Machine Code (from RV32I Assembly)` パネルに disassembly として表示します。
 
 ### Labels
 
@@ -183,7 +183,7 @@ captured generator が `app` で呼ばれる場合も、引数として渡され
 
 ## RV32I Emulator
 
-RV32I emulator は `src/core/riscv.ts` の `createRv32Machine(program, options)` と `stepRv32(state)` で RV32I machine state を実行します。UI では `RISC-V Emulator` パネルで assembly source、PC/status/last instruction、registers、disassembly、call stack、CCAM stack を確認できます。
+RV32I emulator は `src/core/riscv-emu.ts` の `createRv32Machine(program, options)` と `stepRv32(state)` で RV32I machine state を実行します。UI では `RISC-V Emulator` パネルで assembly source、PC/status/last instruction、registers、disassembly、call stack、CCAM stack を確認できます。
 
 ### Initial State
 

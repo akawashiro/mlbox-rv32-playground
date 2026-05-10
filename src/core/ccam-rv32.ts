@@ -1,6 +1,6 @@
 import type { Instruction, Value } from './ccam'
 import { formatInstruction, parseProgram } from './ccam'
-import { assembleRv32Line } from './riscv'
+import { assembleRv32Line } from './riscv-asm'
 
 const sp = 'x2'
 const heap = 'x3'

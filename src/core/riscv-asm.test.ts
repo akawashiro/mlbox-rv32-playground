@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { assembleRv32, assembleRv32Line, createRv32Machine, disassembleRv32, disassembleRv32Word, runRv32 } from './riscv'
+import { assembleRv32, assembleRv32Line, disassembleRv32, disassembleRv32Word } from './riscv-asm'
+import { createRv32Machine, runRv32 } from './riscv-emu'
 
 const allInstructions = [
   'lui x1, 305418240',
