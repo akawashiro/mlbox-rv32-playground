@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { compileCcamProgramToRv32, compileCcamToRv32 } from './ccam-rv32'
 import { formatProgram } from './ccam'
-import { compile } from './compiler'
+import { compile } from './mlbox-ccam'
 import { parse } from './parser'
 import { assembleRv32, assembleRv32Line, createRv32Machine, runRv32 } from './riscv'
 

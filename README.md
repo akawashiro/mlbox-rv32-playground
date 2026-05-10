@@ -5,7 +5,7 @@
 
 ## ML^box to CCAM Program Compiler
 
-ML^box source は `src/core/compiler.ts` の `compile(expr)` で CCAM program に変換されます。UI では `ML^box` パネルの入力から `CCAM Program (from ML^box)` と `ML^box to CCAM Compile Trace` が更新されます。
+ML^box source は `src/core/mlbox-ccam.ts` の `compile(expr)` で CCAM program に変換されます。UI では `ML^box` パネルの入力から `CCAM Program (from ML^box)` と `ML^box to CCAM Compile Trace` が更新されます。
 
 ### Supported Source Forms
 

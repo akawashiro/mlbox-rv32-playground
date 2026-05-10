@@ -3,7 +3,7 @@ import Markdown from 'react-markdown'
 import './App.css'
 import readme from '../README.md?raw'
 import { compileCcamToRv32 } from './core/ccam-rv32'
-import { compile } from './core/compiler'
+import { compile } from './core/mlbox-ccam'
 import { formatProgram, formatValue, parseProgram, run } from './core/ccam'
 import { parse } from './core/parser'
 import {

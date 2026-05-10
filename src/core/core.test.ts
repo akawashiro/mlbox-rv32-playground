@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { compile, compileGenerator, compileNormalTerm } from './compiler'
+import { compile, compileGenerator, compileNormalTerm } from './mlbox-ccam'
 import { formatProgram, formatValue, parseProgram, run } from './ccam'
 import type { Instruction, Value } from './ccam'
 import { parse } from './parser'
