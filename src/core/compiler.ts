@@ -48,7 +48,6 @@ function compileNormalTermCore(expr: Expr, ctx: ContextEntry[]): Compiled {
           { op: 'arena' },
           { op: 'cons' },
           { op: 'app' },
-          { op: 'snd' },
           { op: 'call' },
         ])
       }

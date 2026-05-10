@@ -148,7 +148,7 @@ CCAM の初期環境は pair box として heap に確保され、stack top に�
 
 captured generator が `app` で呼ばれる場合も、引数として渡された同じ block box の cursor を更新します。そのため `let cogen u = code 1 in code u end` のような code variable substitution は、outer generator が作った block に inner generator の emitted code を追加します。
 
-`call` は stack top の block pointer を論理的に消費し、block の entry PC へ `jalr` します。RV32I 実装では、生成コードの結果を書き戻す slot として同じ物理 stack slot を再利用します。戻り先は `app` と同じく `x4` の dedicated return stack に保存します。
+`call` は stack top の `(env, block)` pair から env と block pointer を読み、stack top を env に戻してから block の entry PC へ `jalr` します。RV32I 実装では、生成コードの結果を書き戻す slot として同じ物理 stack slot を再利用します。戻り先は `app` と同じく `x4` の dedicated return stack に保存します。
 
 `add` と `sub` は stack top の pair pointer から left/right の int box pointer を読み、それぞれの integer payload を load して加算または減算します。結果は新しい int box として heap に確保し、その pointer を stack top に書きます。負の結果は 32bit word として保存されるため、`1 - 2` は `0xffffffff` になります。
 

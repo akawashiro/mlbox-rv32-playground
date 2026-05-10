@@ -111,7 +111,9 @@ function execute(instruction: Instruction, stack: Value[], prepend: (program: In
       return
     }
     case 'call': {
-      const block = asBlock(stack.shift())
+      const env = asPair(stack[0])
+      const block = asBlock(env.right)
+      stack[0] = env.left
       prepend(block.program)
       return
     }

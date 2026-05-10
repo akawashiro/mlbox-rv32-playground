@@ -141,7 +141,7 @@ describe('ML^box parser/compiler/CCAM', () => {
     expectLinesInOrder(compiled.log, [
       'push; push; push; \'6; swap; \'7; cons; add; Cur(lift); cons; Cur(emit(push); [[ a ]] Ω=∅ Λ=a; emit(swap); [[ 8 ]] Ω=∅ Λ=a; emit(cons); emit(add)); cons; [[ result ]] Ω=∅ Λ=result',
       'push; push; push; \'6; swap; \'7; cons; add; Cur(lift); cons; Cur(emit(push); push; push; fst; snd; swap; snd; cons; app; snd; swap; emit(swap); [[ 8 ]] Ω=∅ Λ=a; emit(cons); emit(add)); cons; [[ result ]] Ω=∅ Λ=result',
-      'push; push; push; \'6; swap; \'7; cons; add; Cur(lift); cons; Cur(emit(push); push; push; fst; snd; swap; snd; cons; app; snd; swap; emit(swap); emit(\'8); emit(cons); emit(add)); cons; push; snd; swap; arena; cons; app; snd; call',
+      'push; push; push; \'6; swap; \'7; cons; add; Cur(lift); cons; Cur(emit(push); push; push; fst; snd; swap; snd; cons; app; snd; swap; emit(swap); emit(\'8); emit(cons); emit(add)); cons; push; snd; swap; arena; cons; app; call',
     ])
     expect(compiled.log).not.toContain(
       'push; push; push; \'6; swap; \'7; cons; add; Cur(lift; snd); cons; Cur(emit(push); push; emit(swap); [[ 8 ]] Ω=∅ Λ=a; emit(cons); emit(add); snd); cons; snd; arena; cons; app; call',
@@ -220,8 +220,8 @@ describe('ML^box parser/compiler/CCAM', () => {
     })
 
     it('call prepends the current code block to the instruction stream', () => {
-      const result = run([{ op: 'call' }], blockValue([{ op: 'quote', value: intValue(3) }]))
-      expect(formatValue(result.value)).toBe('3')
+      const result = run([{ op: 'call' }], pairValue(intValue(9), blockValue([{ op: 'id' }])))
+      expect(formatValue(result.value)).toBe('9')
     })
   })
 
@@ -309,7 +309,7 @@ describe('ML^box parser/compiler/CCAM', () => {
 
     it('compiles a code variable by activating its generator in a fresh arena', () => {
       const compiled = compileNormalTerm(parse('u'), [{ name: 'u', isCode: true }])
-      expect(formatProgram(compiled.program)).toBe('push; snd; swap; arena; cons; app; snd; call')
+      expect(formatProgram(compiled.program)).toBe('push; snd; swap; arena; cons; app; call')
     })
 
     it('compiles code as a Cur instruction around generator compilation', () => {

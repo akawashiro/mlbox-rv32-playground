@@ -289,7 +289,7 @@ describe('CCAM to RV32I compiler', () => {
   })
 
   it('calls a native lifted value pointer block', () => {
-    const rv32 = compileCcamToRv32("push; '42; Cur(lift); cons; push; snd; swap; arena; cons; app; snd; call")
+    const rv32 = compileCcamToRv32("push; '42; Cur(lift); cons; push; snd; swap; arena; cons; app; call")
     const state = createCcamRv32Machine(rv32)
 
     const steps = runRv32(state)
@@ -301,7 +301,7 @@ describe('CCAM to RV32I compiler', () => {
   })
 
   it('calls a native generated code block and restores the return stack', () => {
-    const rv32 = compileCcamToRv32('arena; call')
+    const rv32 = compileCcamToRv32('push; arena; cons; call')
     const state = createCcamRv32Machine(rv32)
 
     const steps = runRv32(state)
@@ -311,7 +311,7 @@ describe('CCAM to RV32I compiler', () => {
   })
 
   it('merges a callable generated closure body into a native code block', () => {
-    const rv32 = compileCcamToRv32("push; arena; cons; push; push; fst; swap; arena; cons; emit(push); emit(snd); emit(swap); emit('10); emit(cons); emit(add); snd; swap; id; cons; merge; push; snd; call; push; '11; cons; app")
+    const rv32 = compileCcamToRv32("push; arena; cons; push; push; fst; swap; arena; cons; emit(push); emit(snd); emit(swap); emit('10); emit(cons); emit(add); snd; swap; id; cons; merge; call; push; '11; cons; app")
     const state = createCcamRv32Machine(rv32)
 
     const steps = runRv32(state)
@@ -345,7 +345,7 @@ describe('CCAM to RV32I compiler', () => {
   })
 
   it('emits a callable generated closure body into a native code block', () => {
-    const rv32 = compileCcamToRv32("push; arena; cons; push; emit(Cur(snd)); snd; call; push; '1; cons; app")
+    const rv32 = compileCcamToRv32("push; arena; cons; emit(Cur(snd)); call; push; '1; cons; app")
     const state = createCcamRv32Machine(rv32)
 
     const steps = runRv32(state)
@@ -379,7 +379,7 @@ describe('CCAM to RV32I compiler', () => {
   })
 
   it('emits app into a native code block and restores the return stack', () => {
-    const rv32 = compileCcamToRv32("push; arena; cons; emit(push); emit(Cur(snd)); emit(swap); emit('1); emit(cons); emit(app); snd; call")
+    const rv32 = compileCcamToRv32("push; arena; cons; emit(push); emit(Cur(snd)); emit(swap); emit('1); emit(cons); emit(app); call")
     const state = createCcamRv32Machine(rv32)
 
     const steps = runRv32(state)

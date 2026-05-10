@@ -333,7 +333,10 @@ function compileCall(context: CompileContext): string[] {
 
   return [
     `lw ${pairPointer}, 0(${sp})`,
-    `lw ${labelAddress}, 0(${pairPointer})`,
+    `lw ${left}, 0(${pairPointer})`,
+    `lw ${right}, 4(${pairPointer})`,
+    `lw ${labelAddress}, 0(${right})`,
+    `sw ${left}, 0(${sp})`,
     `addi ${returnStack}, ${returnStack}, -4`,
     `sw ${returnAddress}, 0(${returnStack})`,
     `jalr ${returnAddress}, 0(${labelAddress})`,
