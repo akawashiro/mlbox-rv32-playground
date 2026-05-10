@@ -9,6 +9,11 @@
   background: #ffffff;
   padding: 22px 28px;
   text-align: left;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
 }
 
 .topbar h1 {
@@ -26,6 +31,9 @@
 .topbar a {
   color: #2459c7;
   text-underline-offset: 3px;
+  font-size: 14px;
+  font-weight: 650;
+  line-height: 1.2;
 }
 
 .topbar a:focus-visible {

@@ -587,6 +587,9 @@ function Workbench() {
         <div>
           <h1>ML^box to CCAM to RV32I</h1>
         </div>
+        <a href="https://github.com/akawashiro/mlbox-rv32-playground" target="_blank" rel="noreferrer">
+          GitHub
+        </a>
       </header>
 
       <nav className="app-tabs" aria-label="Main sections" role="tablist">
