@@ -1,7 +1,6 @@
 # ML^box to CCAM to RV32I playground
 
-このリポジトリは、ML^box の項を CCAM program にコンパイルし、CCAM emulator と RV32I emulator で観察するための TypeScript + React アプリケーションです。
-
+このリポジトリは、ML^box の項を CCAM program にコンパイルし、CCAM emulator と RV32I emulator で観察するためのアプリケーションです。
 画面は Playground と README のタブで構成されています。Playground では、ML^box source、CCAM compile trace、CCAM program、CCAM emulator、RV32I assembly、RV32I machine code、RV32I emulator を同じページ上で確認できます。
 
 ## ML^box to CCAM Program Compiler
