@@ -1,4 +1,4 @@
-import type { ContextEntry, Expr } from './ast'
+import type { ContextEntry, Expr } from './mlbox-expr-ast'
 import type { Instruction, Value } from './ccam'
 import { formatProgram } from './ccam'
 

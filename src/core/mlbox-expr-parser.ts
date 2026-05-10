@@ -1,4 +1,4 @@
-import type { Expr } from './ast'
+import type { Expr } from './mlbox-expr-ast'
 
 type Token =
   | { type: 'number'; value: number }

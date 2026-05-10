@@ -5,7 +5,7 @@ import readme from '../README.md?raw'
 import { compileCcamToRv32 } from './core/ccam-rv32'
 import { compile } from './core/mlbox-ccam'
 import { formatProgram, formatValue, parseProgram, run } from './core/ccam'
-import { parse } from './core/parser'
+import { parse } from './core/mlbox-expr-parser'
 import {
   assembleRv32,
   createRv32Machine,

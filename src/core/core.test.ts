@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { compile, compileGenerator, compileNormalTerm } from './mlbox-ccam'
 import { formatProgram, formatValue, parseProgram, run } from './ccam'
 import type { Instruction, Value } from './ccam'
-import { parse } from './parser'
+import { parse } from './mlbox-expr-parser'
 
 function execute(source: string) {
   const ast = parse(source)
