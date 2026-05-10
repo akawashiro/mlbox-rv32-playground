@@ -639,7 +639,7 @@ end`)
     expect(steps.at(-1)?.trap?.reason).toBe('ebreak')
   })
 
-  it('compiles lift inside generated code through CCAM to RV32I and leaves boxed 1 on the stack top', () => {
+  it('compiles lift inside generated code through CCAM to RV32I and leaves a generated-code closure on the stack top', () => {
     const ast = parse(`let cogen u = code (lift 1) in
   u
 end`)
@@ -650,7 +650,8 @@ end`)
     const steps = runRv32(state)
 
     const stackTopPointer = readUint32(state.memory, state.regs[2])
-    expect(readUint32(state.memory, stackTopPointer)).toBe(1)
+    expect(readUint32(state.memory, stackTopPointer)).toBeGreaterThanOrEqual(0x00020000)
+    expect(readUint32(state.memory, stackTopPointer + 4)).toBeGreaterThan(0)
     expect(state.regs[4]).toBe(0x0001fffc)
     expect(steps.at(-1)?.trap?.reason).toBe('ebreak')
   })

@@ -92,7 +92,7 @@ RV32I assembly へのコンパイルに対応している CCAM instruction は�
 
 quote は integer value のみ対応しています。`'()` のような unit quote を RV32I compiler に渡すとエラーになります。
 
-`emit(instruction)` が generated native code block に書き込める instruction は、`push`, integer quote, `swap`, `cons`, `fst`, `snd`, `Cur(program)`, `app`, `add`, `sub` です。`merge` は stack top の body block と current block を含む環境を受け取り、body block を closure として current block に挿入します。それ以外の emitted instruction を渡すとエラーになります。
+`emit(instruction)` が generated native code block に書き込める instruction は、`push`, integer quote, `swap`, `cons`, `fst`, `snd`, `Cur(program)`, `app`, `lift`, `add`, `sub` です。`merge` は stack top の body block と current block を含む環境を受け取り、body block を closure として current block に挿入します。それ以外の emitted instruction を渡すとエラーになります。
 
 ### Register Convention
 
@@ -156,7 +156,7 @@ captured generator が `app` で呼ばれる場合も、引数として渡され
 
 現在の CCAM program to RV32I assembly compiler は、ML^box playground のサンプルを通すための最小 runtime です。
 
-- `emit(call)`, `emit(lift)`, `emit(arena)` など、generated-code subset 外の `emit` は未対応です。
+- `emit(call)`, `emit(arena)` など、generated-code subset 外の `emit` は未対応です。
 - generated-code subset 外の instruction を `emit` することは未対応です。
 - integer quote は RV32I `addi` の signed 12bit immediate 範囲、つまり `-2048..2047` に制限されています。
 - object tag はまだありません。

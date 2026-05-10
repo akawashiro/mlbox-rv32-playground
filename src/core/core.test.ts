@@ -94,7 +94,7 @@ describe('ML^box parser/compiler/CCAM', () => {
 
   it('evaluates lift inside generated code', () => {
     const result = execute('let cogen u = code (lift 1) in u end')
-    expect(formatValue(result.value)).toBe('1')
+    expect(formatValue(result.value)).toBe('[1 : lift]')
   })
 
   it('evaluates application inside a generated function', () => {
@@ -363,9 +363,9 @@ describe('ML^box parser/compiler/CCAM', () => {
       )
     })
 
-    it('compiles generator lift by evaluating the source term into the current block', () => {
+    it('compiles generator lift by merging a fresh lifted body block', () => {
       const compiled = compileGenerator(parse('lift 1'), [], [])
-      expect(formatProgram(compiled.program)).toBe("push; fst; '1; swap; snd; cons; lift")
+      expect(formatProgram(compiled.program)).toBe("emit('1); push; push; fst; swap; arena; cons; emit(lift); snd; swap; id; cons; merge")
     })
 
     it('compiles generator let cogen by extending the generator environment', () => {

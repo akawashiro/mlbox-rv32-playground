@@ -271,7 +271,7 @@ function compileGeneratedInstruction(instruction: Instruction, source: 'emit' | 
       if (source === 'merge') return compileMerge(context)
       break
     case 'lift':
-      if (source === 'merge') return compileLift()
+      return compileLift()
       break
     case 'app':
       return compileGeneratedApp()

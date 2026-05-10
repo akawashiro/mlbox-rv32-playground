@@ -217,18 +217,24 @@ function compileGeneratorCore(expr: Expr, capturedCtx: ContextEntry[], codeVars:
       )
     }
     case 'lift': {
-      const body = compileNormalTermCore(expr.body, capturedCtx)
+      const body = compileGeneratorCore(expr.body, capturedCtx, codeVars)
       const program: Instruction[] = [
+        ...body.program,
+        { op: 'push' },
         { op: 'push' },
         { op: 'fst' },
-        ...body.program,
         { op: 'swap' },
-        { op: 'snd' },
+        { op: 'arena' },
         { op: 'cons' },
-        { op: 'lift' },
+        { op: 'emit', instruction: { op: 'lift' } },
+        { op: 'snd' },
+        { op: 'swap' },
+        { op: 'id' },
+        { op: 'cons' },
+        { op: 'merge' },
       ]
-      return composite(judgement, `push; fst; ${formatJudgement(expr.body, capturedCtx, [])}; swap; snd; cons; lift`, program, [
-        { placeholder: formatJudgement(expr.body, capturedCtx, []), trace: body.trace },
+      return composite(judgement, `${formatGeneratorJudgement(expr.body, capturedCtx, codeVars)}; push; push; fst; swap; arena; cons; emit(lift); snd; swap; id; cons; merge`, program, [
+        { placeholder: formatGeneratorJudgement(expr.body, capturedCtx, codeVars), trace: body.trace },
       ])
     }
     case 'code': {
