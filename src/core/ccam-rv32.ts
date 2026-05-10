@@ -265,8 +265,7 @@ function compileGeneratedInstruction(instruction: Instruction, source: 'emit' | 
     case 'sub':
       return compileIntegerBinary(instruction.op)
     case 'arena':
-      if (source === 'merge') return compileArena()
-      break
+      return compileArena()
     case 'merge':
       if (source === 'merge') return compileMerge(context)
       break
@@ -275,6 +274,8 @@ function compileGeneratedInstruction(instruction: Instruction, source: 'emit' | 
       break
     case 'app':
       return compileGeneratedApp()
+    case 'call':
+      return compileGeneratedCall()
   }
 
   const instructionKind = source === 'emit' ? 'emit instruction' : 'merge body instruction'
@@ -292,6 +293,21 @@ function compileGeneratedApp(): string[] {
     `sw ${right}, 4(${heap})`,
     `sw ${heap}, 0(${sp})`,
     `addi ${heap}, ${heap}, 8`,
+    `addi ${returnStack}, ${returnStack}, -4`,
+    `sw ${returnAddress}, 0(${returnStack})`,
+    `jalr ${returnAddress}, 0(${labelAddress})`,
+    `lw ${returnAddress}, 0(${returnStack})`,
+    `addi ${returnStack}, ${returnStack}, 4`,
+  ]
+}
+
+function compileGeneratedCall(): string[] {
+  return [
+    `lw ${pairPointer}, 0(${sp})`,
+    `lw ${left}, 0(${pairPointer})`,
+    `lw ${right}, 4(${pairPointer})`,
+    `lw ${labelAddress}, 0(${right})`,
+    `sw ${left}, 0(${sp})`,
     `addi ${returnStack}, ${returnStack}, -4`,
     `sw ${returnAddress}, 0(${returnStack})`,
     `jalr ${returnAddress}, 0(${labelAddress})`,

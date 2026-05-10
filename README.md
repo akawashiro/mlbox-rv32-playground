@@ -144,7 +144,7 @@ CCAM の初期環境は pair box として heap に確保され、stack top に�
 
 `arena` は data heap に block box を確保し、`x9` が指す generated code heap 上に return footer を置きます。block box の entry/cursor はどちらもこの footer を指し、`x9` は footer の直後へ進みます。
 
-`emit(instruction)` は現在 stack top の `(env, block)` pair から block pointer を読み、block の cursor にある footer を native snippet で上書きします。snippet 末尾には新しい footer を置き、block cursor と `x9` を更新します。現在は integer quote に加えて、stack 操作、pair projection/construction、`add` / `sub`、生成された closure、生成コード内の `app` を emitted snippet として扱えます。
+`emit(instruction)` は現在 stack top の `(env, block)` pair から block pointer を読み、block の cursor にある footer を native snippet で上書きします。snippet 末尾には新しい footer を置き、block cursor と `x9` を更新します。現在は integer quote に加えて、stack 操作、pair projection/construction、`arena`、`add` / `sub`、生成された closure、生成コード内の `app` / `call` / `lift` を emitted snippet として扱えます。
 
 captured generator が `app` で呼ばれる場合も、引数として渡された同じ block box の cursor を更新します。そのため `let cogen u = code 1 in code u end` のような code variable substitution は、outer generator が作った block に inner generator の emitted code を追加します。
 
@@ -156,7 +156,6 @@ captured generator が `app` で呼ばれる場合も、引数として渡され
 
 現在の CCAM program to RV32I assembly compiler は、ML^box playground のサンプルを通すための最小 runtime です。
 
-- `emit(call)`, `emit(arena)` など、generated-code subset 外の `emit` は未対応です。
 - generated-code subset 外の instruction を `emit` することは未対応です。
 - integer quote は RV32I `addi` の signed 12bit immediate 範囲、つまり `-2048..2047` に制限されています。
 - object tag はまだありません。

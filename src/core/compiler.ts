@@ -143,14 +143,18 @@ function compileGeneratorCore(expr: Expr, capturedCtx: ContextEntry[], codeVars:
   switch (expr.type) {
     case 'int':
       return leaf(judgement, [{ op: 'emit', instruction: { op: 'quote', value: intValue(expr.value) } }])
-    case 'var':
-      if (codeVars.includes(expr.name)) {
-        return leaf(judgement, codeVariableSubstitution(envPath(capturedCtx, expr.name)))
+    case 'var': {
+      const entry = lookup(capturedCtx, expr.name)
+      const path = envPath(capturedCtx, expr.name)
+      if (entry.isCode) {
+        if (codeVars.includes(expr.name)) return leaf(judgement, codeVariableSubstitution(path))
+        return leaf(judgement, emitSequence([{ op: 'push' }, ...path, { op: 'swap' }, { op: 'arena' }, { op: 'cons' }, { op: 'app' }, { op: 'call' }]))
       }
       return leaf(
         judgement,
-        envPath(capturedCtx, expr.name).map((instruction) => ({ op: 'emit', instruction }) as Instruction),
+        path.map((instruction) => ({ op: 'emit', instruction }) as Instruction),
       )
+    }
     case 'lambda': {
       const bodyCtx = [...capturedCtx, { name: expr.param, isCode: false }]
       const body = compileGeneratorCore(expr.body, bodyCtx, codeVars)
@@ -256,23 +260,18 @@ function compileGeneratorCore(expr: Expr, capturedCtx: ContextEntry[], codeVars:
       )
     }
     case 'letCogen': {
-      const generator = compileNormalTermCore(expr.generator, capturedCtx)
+      const generator = compileGeneratorCore(expr.generator, capturedCtx, codeVars)
       const bodyCtx = [...capturedCtx, { name: expr.name, isCode: true }]
-      const body = compileGeneratorCore(expr.body, bodyCtx, [...codeVars, expr.name])
+      const body = compileGeneratorCore(expr.body, bodyCtx, codeVars)
       const program: Instruction[] = [
-        { op: 'push' },
-        { op: 'fst' },
-        { op: 'push' },
+        ...emitSequence([{ op: 'push' }]),
         ...generator.program,
-        { op: 'cons' },
-        { op: 'swap' },
-        { op: 'snd' },
-        { op: 'cons' },
+        ...emitSequence([{ op: 'cons' }]),
         ...body.program,
       ]
-      return composite(judgement, `push; fst; push; ${formatJudgement(expr.generator, capturedCtx, [])}; cons; swap; snd; cons; ${formatGeneratorJudgement(expr.body, bodyCtx, [...codeVars, expr.name])}`, program, [
-        { placeholder: formatJudgement(expr.generator, capturedCtx, []), trace: generator.trace },
-        { placeholder: formatGeneratorJudgement(expr.body, bodyCtx, [...codeVars, expr.name]), trace: body.trace },
+      return composite(judgement, `emit(push); ${formatGeneratorJudgement(expr.generator, capturedCtx, codeVars)}; emit(cons); ${formatGeneratorJudgement(expr.body, bodyCtx, codeVars)}`, program, [
+        { placeholder: formatGeneratorJudgement(expr.generator, capturedCtx, codeVars), trace: generator.trace },
+        { placeholder: formatGeneratorJudgement(expr.body, bodyCtx, codeVars), trace: body.trace },
       ])
     }
   }

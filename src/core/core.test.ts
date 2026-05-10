@@ -347,7 +347,7 @@ describe('ML^box parser/compiler/CCAM', () => {
     it('compiles generator let cogen by binding the generated cogen before substituting it', () => {
       const compiled = compileGenerator(parse('let cogen u = code 1 in u end'), [], [])
       expect(formatProgram(compiled.program)).toBe(
-        "push; fst; push; Cur(emit('1)); cons; swap; snd; cons; push; push; fst; snd; swap; snd; cons; app; snd; swap",
+        "emit(push); push; fst; Cur(emit('1)); swap; snd; cons; lift; emit(cons); emit(push); emit(snd); emit(swap); emit(arena); emit(cons); emit(app); emit(call)",
       )
     })
 
@@ -371,7 +371,7 @@ describe('ML^box parser/compiler/CCAM', () => {
     it('compiles generator let cogen by extending the generator environment', () => {
       const compiled = compileGenerator(parse('let cogen u = code 1 in 2 end'), [], [])
       expect(formatProgram(compiled.program)).toBe(
-        "push; fst; push; Cur(emit('1)); cons; swap; snd; cons; emit('2)",
+        "emit(push); push; fst; Cur(emit('1)); swap; snd; cons; lift; emit(cons); emit('2)",
       )
     })
   })

@@ -717,7 +717,7 @@ end`)
   })
 
   it('rejects unsupported emitted CCAM instructions', () => {
-    expect(() => compileCcamToRv32('emit(call)')).toThrow('Unsupported CCAM emit instruction')
+    expect(() => compileCcamToRv32('emit(id)')).toThrow('Unsupported CCAM emit instruction')
   })
 
   it('compiles unit quotes as boxed placeholders', () => {
