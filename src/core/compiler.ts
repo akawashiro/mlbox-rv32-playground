@@ -331,6 +331,8 @@ function emitSequence(program: Instruction[]): Instruction[] {
 function codeVariableSubstitution(path: Instruction[]): Instruction[] {
   return [
     { op: 'push' },
+    { op: 'fst' },
+    { op: 'swap' },
     { op: 'push' },
     { op: 'fst' },
     ...path,
@@ -339,7 +341,7 @@ function codeVariableSubstitution(path: Instruction[]): Instruction[] {
     { op: 'cons' },
     { op: 'app' },
     { op: 'snd' },
-    { op: 'swap' },
+    { op: 'cons' },
   ]
 }
 

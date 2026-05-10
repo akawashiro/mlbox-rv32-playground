@@ -140,8 +140,8 @@ describe('ML^box parser/compiler/CCAM', () => {
     ])
     expectLinesInOrder(compiled.log, [
       'push; push; push; \'6; swap; \'7; cons; add; Cur(lift); cons; Cur(emit(push); [[ a ]] Ω=∅ Λ=a; emit(swap); [[ 8 ]] Ω=∅ Λ=a; emit(cons); emit(add)); cons; [[ result ]] Ω=∅ Λ=result',
-      'push; push; push; \'6; swap; \'7; cons; add; Cur(lift); cons; Cur(emit(push); push; push; fst; snd; swap; snd; cons; app; snd; swap; emit(swap); [[ 8 ]] Ω=∅ Λ=a; emit(cons); emit(add)); cons; [[ result ]] Ω=∅ Λ=result',
-      'push; push; push; \'6; swap; \'7; cons; add; Cur(lift); cons; Cur(emit(push); push; push; fst; snd; swap; snd; cons; app; snd; swap; emit(swap); emit(\'8); emit(cons); emit(add)); cons; push; snd; swap; arena; cons; app; call',
+      'push; push; push; \'6; swap; \'7; cons; add; Cur(lift); cons; Cur(emit(push); push; fst; swap; push; fst; snd; swap; snd; cons; app; snd; cons; emit(swap); [[ 8 ]] Ω=∅ Λ=a; emit(cons); emit(add)); cons; [[ result ]] Ω=∅ Λ=result',
+      'push; push; push; \'6; swap; \'7; cons; add; Cur(lift); cons; Cur(emit(push); push; fst; swap; push; fst; snd; swap; snd; cons; app; snd; cons; emit(swap); emit(\'8); emit(cons); emit(add)); cons; push; snd; swap; arena; cons; app; call',
     ])
     expect(compiled.log).not.toContain(
       'push; push; push; \'6; swap; \'7; cons; add; Cur(lift; snd); cons; Cur(emit(push); push; emit(swap); [[ 8 ]] Ω=∅ Λ=a; emit(cons); emit(add); snd); cons; snd; arena; cons; app; call',
@@ -353,7 +353,7 @@ describe('ML^box parser/compiler/CCAM', () => {
 
     it('compiles generator code variables in Lambda by substituting the captured generator', () => {
       const compiled = compileGenerator(parse('u'), [{ name: 'u', isCode: true }], ['u'])
-      expect(formatProgram(compiled.program)).toBe('push; push; fst; snd; swap; snd; cons; app; snd; swap')
+      expect(formatProgram(compiled.program)).toBe('push; fst; swap; push; fst; snd; swap; snd; cons; app; snd; cons')
     })
 
     it('compiles nested generator code by lifting and applying a generator closure', () => {
